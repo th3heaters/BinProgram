@@ -6,7 +6,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
  
 #include <string>
 #include <algorithm>
-#include <exception>
+#include <stdexcept>
 #include <bitset>
 
 class CApp
@@ -30,5 +30,5 @@ private:
 private:
 	const std::wstring m_sizeAppname{ L"Bin-VV" }, m_szClassName{ L"Bin-VV_Winddows_class_nostyles" };
 	HWND m_hWnd{}, m_hWndButton{}, m_hWndEdit{};
-	const int m_AppWidth{ 350 }, m_AppHeight{ 350 };
+	const int m_AppWidth{ 350 }, m_AppHeight{ 250 };
 };

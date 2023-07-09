@@ -8,6 +8,7 @@ CApp::CApp()
 	{
 		this->init_native_window_obj();
 		this->create_native_controls();
+		
 	}
 	catch (const std::exception& e)
 	{
@@ -48,7 +49,7 @@ void CApp::init_native_window_obj()
 	wc.lpfnWndProc = CApp::application_proc;
 	wc.lpszClassName = this->m_szClassName.c_str();
 	wc.lpszMenuName = nullptr;
-	wc.style = CS_VREDRAW | CS_HREDRAW;
+	wc.style = CS_HREDRAW | CS_VREDRAW;
 	
 	if (!RegisterClassEx(&wc))
 	{
@@ -56,7 +57,7 @@ void CApp::init_native_window_obj()
 	}
 	
 	RECT windowRC{ 0, 0, this->m_AppWidth, this->m_AppHeight };
-	AdjustWindowRect(&windowRC, WS_OVERLAPPEDWINDOW, false);
+	AdjustWindowRect(&windowRC, WS_DLGFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZE, false);
 
 	this->m_hWnd = CreateWindowEx(
 		0,
@@ -76,10 +77,16 @@ LRESULT CApp::application_proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	{
 		pApp = static_cast<CApp*>(reinterpret_cast<CREATESTRUCT*>(lParam)->lpCreateParams);
 		SetLastError(0);
-		SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pApp));
+		if (!SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pApp)))
+		{
+			if (GetLastError() != 0)
+				return false;
+		}
 	}
 	else
+	{
 			pApp = reinterpret_cast<CApp*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+		}
 	if (pApp)
 	{
 		pApp->m_hWnd = hWnd;
@@ -87,13 +94,13 @@ LRESULT CApp::application_proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	}
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
-LRESULT CApp::window_proc(HWND hWnd, UINT uMsg, WPARAM wPAram, LPARAM lPAram)
+LRESULT CApp::window_proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
 	case WM_COMMAND:
 	{
-		switch (static_cast<CApp::CTL_ID>(LOWORD(wPAram)))
+		switch (static_cast<CApp::CTL_ID>(LOWORD(wParam)))
 		{
 			case CApp::CTL_ID::CALCBUTTON_ID:
 			{
@@ -101,7 +108,7 @@ LRESULT CApp::window_proc(HWND hWnd, UINT uMsg, WPARAM wPAram, LPARAM lPAram)
 				{
 					std::wstring text{};
 					text.resize(MAX_PATH);
-					GetWindowText(this->m_hWnd, &text[0], MAX_PATH);
+					GetWindowText(this->m_hWndEdit, &text[0], MAX_PATH);
 					text.erase(remove(begin(text), end(text), 0), end(text));
 					if (text.empty())
 					{
@@ -127,24 +134,29 @@ LRESULT CApp::window_proc(HWND hWnd, UINT uMsg, WPARAM wPAram, LPARAM lPAram)
 	}
 	return 0;
 	}
+	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 void CApp::create_native_controls()
 {
 	using std::runtime_error;
 	using namespace std::string_literals;
 	this->m_hWndButton = CreateWindowEx(
-		WS_EX_CLIENTEDGE,
+		0,
 		L"BUTTON",
 		L"Перевести",
-		WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+		WS_CHILD | BS_PUSHBUTTON | WS_VISIBLE,
 		56, 108, 238, 37, this->m_hWnd, reinterpret_cast<HMENU>(CApp::CTL_ID::CALCBUTTON_ID), nullptr, nullptr);
+	if (!this->m_hWndButton)
+		throw runtime_error("error button");
 	this->m_hWndEdit = CreateWindowEx(
 		WS_EX_CLIENTEDGE,
 		L"EDIT",
 		L"256",
 		WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-		59, 68, 238, 24, this->m_hWnd, reinterpret_cast<HMENU>(CApp::CTL_ID::RESULTEDIT_ID), nullptr, nullptr);
-	HFONT hFont = CreateFont(10, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Roboto");
+		56, 66, 238, 24, this->m_hWnd, reinterpret_cast<HMENU>(CApp::CTL_ID::RESULTEDIT_ID), nullptr, nullptr);
+	if (!this->m_hWndEdit)
+		throw runtime_error("error edit");
+	HFONT hFont = CreateFont(20, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Roboto");
 	SendMessage(this->m_hWndEdit, WM_SETFONT, reinterpret_cast<WPARAM> (hFont), TRUE);
 	SendMessage(this->m_hWndButton, WM_SETFONT, reinterpret_cast<WPARAM> (hFont), TRUE);
 } 
