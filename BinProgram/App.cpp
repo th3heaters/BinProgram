@@ -1,5 +1,6 @@
 #include "app.h"
 #include <stdexcept>
+#pragma warning(disable : 4996)
 CApp::CApp()
 {
 	using std::wstring;
@@ -106,17 +107,27 @@ LRESULT CApp::window_proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				try 
 				{
-					std::wstring text{};
+					std::wstring text{}, num{};
+					std::string buff;
 					text.resize(MAX_PATH);
+					num.resize(MAX_PATH);
 					GetWindowText(this->m_hWndEdit, &text[0], MAX_PATH);
+					GetWindowText(this->m_hWndNumeric, &num[0], MAX_PATH);
 					text.erase(remove(begin(text), end(text), 0), end(text));
 					if (text.empty())
 					{
 						MessageBox(hWnd, L"Введите число", L"Информация", MB_ICONINFORMATION | MB_OK);
 						break;
 					}
-					std::string binary = std::bitset<16>(std::stoi(text)).to_string();
-					text = std::wstring(begin(binary), end(binary));
+					if (num.empty())
+					{
+						MessageBox(hWnd, L"Введите систему счисления", L"Информация", MB_ICONINFORMATION | MB_OK);
+					}
+					int numeric = std::stoi(num);
+					int nums = std::stoi(text);
+					const char* c = buff.c_str();
+					buff = itoa(nums, const_cast<char*>(c), numeric);
+					text = std::wstring(begin(buff), end(buff));
 					SetWindowText(this->m_hWndEdit, text.c_str());
 				}
 				catch (...)
@@ -154,9 +165,19 @@ void CApp::create_native_controls()
 		L"256",
 		WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
 		56, 66, 238, 24, this->m_hWnd, reinterpret_cast<HMENU>(CApp::CTL_ID::RESULTEDIT_ID), nullptr, nullptr);
+	this->m_hWndNumeric = CreateWindowEx(
+		WS_EX_CLIENTEDGE,
+		L"EDIT",
+		L"Система счисления",
+		WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+		56, 22, 238, 30, this->m_hWnd, reinterpret_cast<HMENU>(CApp::CTL_ID::NUMERIC_ID), nullptr, nullptr);
+	if (!this->m_hWndNumeric)
+		throw runtime_error("error numeric");
+
 	if (!this->m_hWndEdit)
 		throw runtime_error("error edit");
 	HFONT hFont = CreateFont(20, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Roboto");
 	SendMessage(this->m_hWndEdit, WM_SETFONT, reinterpret_cast<WPARAM> (hFont), TRUE);
 	SendMessage(this->m_hWndButton, WM_SETFONT, reinterpret_cast<WPARAM> (hFont), TRUE);
+	SendMessage(this->m_hWndNumeric, WM_SETFONT, reinterpret_cast<WPARAM> (hFont), TRUE);
 } 

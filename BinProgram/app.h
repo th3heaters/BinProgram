@@ -8,13 +8,15 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #include <algorithm>
 #include <stdexcept>
 #include <bitset>
+#include <cstdlib>
 
 class CApp
 {
 	enum class CTL_ID
 	{
 		CALCBUTTON_ID,
-		RESULTEDIT_ID
+		RESULTEDIT_ID,
+		NUMERIC_ID
 	};
 public:
 	explicit CApp();
@@ -29,6 +31,6 @@ private:
 	void create_native_controls();
 private:
 	const std::wstring m_sizeAppname{ L"Bin-VV" }, m_szClassName{ L"Bin-VV_Winddows_class_nostyles" };
-	HWND m_hWnd{}, m_hWndButton{}, m_hWndEdit{};
+	HWND m_hWnd{}, m_hWndButton{}, m_hWndEdit{}, m_hWndNumeric;
 	const int m_AppWidth{ 350 }, m_AppHeight{ 250 };
 };
